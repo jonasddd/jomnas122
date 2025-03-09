@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Summarizer</title>
+  <style>
+    :root {
+      --primary-color: #4a6fa5;
+      --secondary-color: #f5f5f5;
+      --accent-color: #6b8cbe;
+      --text-color: #333;
+      --success-color: #4caf50;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      margin-bottom: 10px;
+    }
+    
+    .description {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .card-title {
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .word-count {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 300px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      resize: vertical;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 5px rgba(107, 140, 190, 0.5);
+    }
+    
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: var(--accent-color);
+    }
+    
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    label {
+      font-size: 14px;
+    }
+    
+    select {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    .success-message {
+      color: var(--success-color);
+      margin-top: 10px;
+      font-weight: bold;
+      display: none;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+    
+    .output-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #f1f1f1;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-radius: 5px 5px 0 0;
+      margin-right: 5px;
+    }
+    
+    .tab.active {
+      background-color: white;
+      border-bottom: 1px solid white;
+      margin-bottom: -1px;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .bullet-list {
+      padding-left: 20px;
+      list-style-type: disc;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Text Summarizer</h1>
+      <p class="description">Insert long texts and get concise summaries or bullet points that are easier to remember.</p>
+    </header>
+    
+    <div class="main-content">
+      <div class="card">
+        <div class="card-title">
+          <h2>Original Text</h2>
+          <span id="originalWordCount" class="word-count">0 words</span>
+        </div>
+        <textarea id="originalText" placeholder="Paste your text here..."></textarea>
+        <div class="options">
+          <div class="option">
+            <label for="outputType">Output Type:</label>
+            <select id="outputType">
+              <option value="summary">Summary</option>
+              <option value="bulletPoints">Bullet Points</option>
+            </select>
+          </div>
+          <div class="option">
+            <label for="summaryLength">Length:</label>
+            <select id="summaryLength">
+              <option value="short">Short (20%)</option>
+              <option value="medium" selected>Medium (30%)</option>
+              <option value="long">Long (50%)</option>
+            </select>
+          </div>
+          <div class="option">
+            <label for="style">Style:</label>
+            <select id="style">
+              <option value="informative">Informative</option>
+              <option value="academic">Academic</option>
+              <option value="simplified">Simplified</option>
+            </select>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="processBtn">Process</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+        <p id="successMessage" class="success-message">Text successfully processed!</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">
+          <h2>Result</h2>
+          <span id="resultWordCount" class="word-count">0 words</span>
+        </div>
+        
+        <div class="tabs">
+          <div id="summaryTab" class="tab active">Summary</div>
+          <div id="bulletPointsTab" class="tab">Bullet Points</div>
+        </div>
+        
+        <div id="summaryContent" class="tab-content active">
+          <textarea id="summaryText" placeholder="Your summary will appear here..." readonly></textarea>
+        </div>
+        
+        <div id="bulletPointsContent" class="tab-content">
+          <textarea id="bulletPointsText" placeholder="Your bullet points will appear here..." readonly></textarea>
+        </div>
+        
+        <div class="output-controls">
+          <button id="copyBtn">Copy to Clipboard</button>
+          <button id="downloadBtn">Download as Text File</button>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>© 2025 Text Summarizer - A tool for summarizing long texts</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM Elements
+      const originalText = document.getElementById('originalText');
+      const summaryText = document.getElementById('summaryText');
+      const bulletPointsText = document.getElementById('bulletPointsText');
+      const originalWordCount = document.getElementById('originalWordCount');
+      const resultWordCount = document.getElementById('resultWordCount');
+      const processBtn = document.getElementById('processBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const summaryLength = document.getElementById('summaryLength');
+      const style = document.getElementById('style');
+      const outputType = document.getElementById('outputType');
+      const successMessage = document.getElementById('successMessage');
+      
+      // Tabs
+      const summaryTab = document.getElementById('summaryTab');
+      const bulletPointsTab = document.getElementById('bulletPointsTab');
+      const summaryContent = document.getElementById('summaryContent');
+      const bulletPointsContent = document.getElementById('bulletPointsContent');
+      
+      // Current active tab
+      let activeTab = 'summary';
+      
+      // Update word count for original text
+      originalText.addEventListener('input', function() {
+        const words = this.value.trim().split(/\s+/).filter(Boolean).length;
+        originalWordCount.textContent = words + ' words';
+      });
+      
+      // Tab switching
+      summaryTab.addEventListener('click', function() {
+        setActiveTab('summary');
+      });
+      
+      bulletPointsTab.addEventListener('click', function() {
+        setActiveTab('bulletPoints');
+      });
+      
+      function setActiveTab(tab) {
+        activeTab = tab;
+        
+        // Reset all tabs and contents
+        summaryTab.classList.remove('active');
+        bulletPointsTab.classList.remove('active');
+        summaryContent.classList.remove('active');
+        bulletPointsContent.classList.remove('active');
+        
+        // Set active tab and content
+        if (tab === 'summary') {
+          summaryTab.classList.add('active');
+          summaryContent.classList.add('active');
+          updateWordCount(summaryText.value);
+        } else {
+          bulletPointsTab.classList.add('active');
+          bulletPointsContent.classList.add('active');
+          updateWordCount(bulletPointsText.value);
+        }
+      }
+      
+      // Update result word count
+      function updateWordCount(text) {
+        const words = text.trim().split(/\s+/).filter(Boolean).length;
+        resultWordCount.textContent = words + ' words';
+      }
+      
+      // Process text function
+      processBtn.addEventListener('click', function() {
+        const text = originalText.value.trim();
+        
+        if (!text) {
+          alert('Please enter some text to process.');
+          return;
+        }
+        
+        // Show success message
+        successMessage.style.display = 'block';
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+        }, 3000);
+        
+        // Generate output based on selected options
+        const lengthOption = summaryLength.value;
+        const styleOption = style.value;
+        const outputTypeOption = outputType.value;
+        
+        // Process based on output type
+        if (outputTypeOption === 'summary') {
+          const summary = generateSummary(text, lengthOption, styleOption);
+          summaryText.value = summary;
+          updateWordCount(summary);
+          setActiveTab('summary');
+        } else {
+          const bulletPoints = generateBulletPoints(text, lengthOption, styleOption);
+          bulletPointsText.value = bulletPoints;
+          updateWordCount(bulletPoints);
+          setActiveTab('bulletPoints');
+        }
+      });
+      
+      // Clear text function
+      clearBtn.addEventListener('click', function() {
+        originalText.value = '';
+        originalWordCount.textContent = '0 words';
+      });
+      
+      // Copy to clipboard function
+      copyBtn.addEventListener('click', function() {
+        const activeContent = activeTab === 'summary' ? summaryText : bulletPointsText;
+        
+        if (!activeContent.value) {
+          alert('There is no content to copy yet.');
+          return;
+        }
+        
+        activeContent.select();
+        document.execCommand('copy');
+        
+        // Show temporary success message
+        const originalText = this.textContent;
+        this.textContent = 'Copied!';
+        setTimeout(() => {
+          this.textContent = originalText;
+        }, 2000);
+      });
+      
+      // Download as text file
+      downloadBtn.addEventListener('click', function() {
+        const activeContent = activeTab === 'summary' ? summaryText : bulletPointsText;
+        
+        if (!activeContent.value) {
+          alert('There is no content to download yet.');
+          return;
+        }
+        
+        const filename = activeTab === 'summary' ? 'summary.txt' : 'bullet_points.txt';
+        const blob = new Blob([activeContent.value], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+      
+      // Function to generate summary
+      function generateSummary(text, lengthOption, styleOption) {
+        // Split text into sentences
+        const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [];
+        
+        // Determine how many sentences to keep based on length option
+        let percentage;
+        switch (lengthOption) {
+          case 'short':
+            percentage = 0.2;
+            break;
+          case 'medium':
+            percentage = 0.3;
+            break;
+          case 'long':
+            percentage = 0.5;
+            break;
+          default:
+            percentage = 0.3;
+        }
+        
+        // Simple algorithm: keep the first sentence, then select sentences based on importance
+        const sentencesToKeep = Math.max(1, Math.floor(sentences.length * percentage));
+        let selectedSentences = [];
+        
+        // Always include the first sentence
+        if (sentences.length > 0) {
+          selectedSentences.push(sentences[0]);
+        }
+        
+        // Select additional sentences
+        if (sentences.length > 1) {
+          // Simple selection strategy: take evenly distributed sentences
+          const step = Math.floor(sentences.length / (sentencesToKeep - 1));
+          for (let i = 1; i < sentencesToKeep && step * i < sentences.length; i++) {
+            selectedSentences.push(sentences[step * i]);
+          }
+        }
+        
+        // Apply style modifications
+        let summary = selectedSentences.join(' ');
+        
+        switch (styleOption) {
+          case 'academic':
+            // Make it sound more formal
+            summary = summary.replace(/can/g, 'can potentially')
+                             .replace(/good/g, 'adequate')
+                             .replace(/bad/g, 'inadequate')
+                             .replace(/big/g, 'substantial')
+                             .replace(/show/g, 'demonstrate')
+                             .replace(/use/g, 'utilize');
+            break;
+          case 'simplified':
+            // Make it simpler
+            summary = summary.replace(/however/g, 'but')
+                             .replace(/therefore/g, 'so')
+                             .replace(/additionally/g, 'also')
+                             .replace(/consequently/g, 'so')
+                             .replace(/furthermore/g, 'also');
+            break;
+          // Informative is the default style, no changes needed
+        }
+        
+        return summary;
+      }
+      
+      // Function to generate bullet points
+      function generateBulletPoints(text, lengthOption, styleOption) {
+        // Split text into sentences
+        const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [];
+        
+        // Determine how many points to generate based on length option
+        let percentage;
+        switch (lengthOption) {
+          case 'short':
+            percentage = 0.15;
+            break;
+          case 'medium':
+            percentage = 0.25;
+            break;
+          case 'long':
+            percentage = 0.4;
+            break;
+          default:
+            percentage = 0.25;
+        }
+        
+        const pointsToGenerate = Math.max(3, Math.floor(sentences.length * percentage));
+        
+        // Find the most important sentences (for a real implementation, use NLP or keyword extraction)
+        // For simplicity, we'll take the first sentence and then evenly distributed ones
+        let selectedSentences = [];
+        
+        // Always include the first sentence
+        if (sentences.length > 0) {
+          selectedSentences.push(sentences[0]);
+        }
+        
+        // Select additional key sentences
+        if (sentences.length > 1) {
+          const step = Math.floor(sentences.length / (pointsToGenerate - 1));
+          for (let i = 1; i < pointsToGenerate && step * i < sentences.length; i++) {
+            selectedSentences.push(sentences[step * i]);
+          }
+        }
+        
+        // Process sentences into bullet points
+        let bulletPoints = '';
+        selectedSentences.forEach(sentence => {
+          // Remove trailing punctuation and trim
+          let point = sentence.trim().replace(/[\.!\?]+$/, '');
+          
+          // Apply style modifications
+          switch (styleOption) {
+            case 'academic':
+              point = point.replace(/can/g, 'can potentially')
+                          .replace(/good/g, 'adequate')
+                          .replace(/bad/g, 'inadequate')
+                          .replace(/big/g, 'substantial')
+                          .replace(/show/g, 'demonstrate')
+                          .replace(/use/g, 'utilize');
+              break;
+            case 'simplified':
+              point = point.replace(/however/g, 'but')
+                          .replace(/therefore/g, 'so')
+                          .replace(/additionally/g, 'also')
+                          .replace(/consequently/g, 'so')
+                          .replace(/furthermore/g, 'also');
+              break;
+            // Informative is the default style, no changes needed
+          }
+          
+          // Make it a bullet point
+          bulletPoints += '• ' + point + '\n\n';
+        });
+        
+        return bulletPoints;
+      }
+      
+      // Initialize output type change event to show the appropriate tab
+      outputType.addEventListener('change', function() {
+        if (this.value === 'summary') {
+          setActiveTab('summary');
+        } else {
+          setActiveTab('bulletPoints');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
